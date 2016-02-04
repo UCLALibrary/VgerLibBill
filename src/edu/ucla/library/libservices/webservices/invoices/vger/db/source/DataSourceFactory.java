@@ -12,9 +12,9 @@ public class DataSourceFactory
 
     ds = new DriverManagerDataSource();
     ds.setDriverClassName( "oracle.jdbc.OracleDriver" );
-    ds.setUrl( "jdbc:oracle:thin:@ils-db-test.library.ucla.edu:1521:VGER" );
-    ds.setUsername( "vger_support" );
-    ds.setPassword( "vger_support_pwd" );
+    ds.setUrl( "orable_url" );
+    ds.setUsername( "oracle_user" );
+    ds.setPassword( "oracle_pwd" );
 
     return ds;
   }
@@ -25,9 +25,9 @@ public class DataSourceFactory
 
     ds = new DriverManagerDataSource();
     ds.setDriverClassName( "oracle.jdbc.OracleDriver" );
-    ds.setUrl( "jdbc:oracle:thin:@ils-db-test.library.ucla.edu:1521:VGER" );
-    ds.setUsername( "invoice_service" ); // "invoice_service_dev" );
-    ds.setPassword( "invoice_service_pwd" ); //"invoice_service_dev_pwd" );
+    ds.setUrl( "oracle_url" );
+    ds.setUsername( "other_oracle_user" );
+    ds.setPassword( "other_oracle__pwd" );
 
     return ds;
   }
