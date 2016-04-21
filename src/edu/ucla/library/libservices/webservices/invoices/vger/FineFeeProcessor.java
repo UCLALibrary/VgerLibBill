@@ -152,7 +152,9 @@ public class FineFeeProcessor
     theClient.setProps( null );
 
     bean = new LineItemBean();
-
+    
+    System.out.println( "\tworking with fine/fee record " + bill.getFineFeeID() );
+    System.out.println( "\tfine fee type = " + bill.getFineFeeType() );
     switch ( bill.getFineFeeType() )
     {
       case VGER_OVERDUE:
@@ -172,11 +174,14 @@ public class FineFeeProcessor
         bean.setBranchServiceID( getLineType( PROCESSING ) );
         break;
       default:
-        logger.info( "no match made for charge type " + bill.getFineFeeType() );
+        logger.info( "no match made for charge type " +
+                     bill.getFineFeeType() );
     }
-    if ( bill.getFineFeeType() == 2 ) //custom
+    if ( ( bill.getFineFeeType() == VGER_OVERDUE ) ||
+         ( bill.getFineFeeType() == VGER_REPLACE ) ) //custom price fines
     {
-      bean.setUnitPrice( bill.getFineFeeBalance() );
+      System.out.println( "\t\tsetting line amount to " + bill.getFineFeeBalance() );
+      bean.setUnitPrice( bill.getFineFeeBalance() / 100D );
     }
     bean.setCreatedBy( "vger_user" );
     bean.setCreatedDate( new Date() );
@@ -222,32 +227,29 @@ public class FineFeeProcessor
   {
     LineItemNote theNote;
     LineNoteClient theClient;
-    StringBuffer note;
+    Vector<String> notes;
+    
+    notes = new Vector<String>(4);
+    notes.add( makeNote( "Title: ", bill.getTitle() ) );
+    notes.add( makeNote( "Author: ", bill.getAuthor() ) );
+    notes.add( makeNote( "Barcode: ", bill.getItemBarcode() ) );
+    notes.add( makeNote( "Call number: ", bill.getNormalizedCallNo() ) );
 
-    note = new StringBuffer( "Title: " );
-    note.append( !ContentTests.isEmpty( bill.getTitle() ) ?
-                 bill.getTitle().trim(): "N/A" );
-    note.append( "; \tAuthor: " ).append( !ContentTests.isEmpty( bill.getAuthor() ) ?
-                                          bill.getAuthor().trim(): "N/A" );
-    note.append( "; \tBarcode: " ).append( !ContentTests.isEmpty( bill.getItemBarcode() ) ?
-                                           bill.getItemBarcode().trim():
-                                           "N/A" );
-    note.append( "; \tCall number: " ).append( !ContentTests.isEmpty( bill.getNormalizedCallNo() ) ?
-                                               bill.getNormalizedCallNo().trim():
-                                               "N/A" );
+    for ( String aNote : notes )
+    {
+      theNote = new LineItemNote();
+      theNote.setCreatedBy( "vger_user" );
+      theNote.setCreatedDate( new Date() );
+      theNote.setInternal( false );
+      theNote.setInvoiceNumber( invoiceNo );
+      theNote.setLineNumber( lineNumber );
+      theNote.setNote( aNote );
 
-    theNote = new LineItemNote();
-    theNote.setCreatedBy( "vger_user" );
-    theNote.setCreatedDate( new Date() );
-    theNote.setInternal( false );
-    theNote.setInvoiceNumber( invoiceNo );
-    theNote.setLineNumber( lineNumber );
-    theNote.setNote( note.toString() );
-
-    theClient = new LineNoteClient();
-    theClient.setProps( null );
-    theClient.setTheNote( theNote );
-    theClient.insertNote();
+      theClient = new LineNoteClient();
+      theClient.setProps( null );
+      theClient.setTheNote( theNote );
+      theClient.insertNote();
+    }
   }
 
   private static void setStatus( String invoiceNo )
@@ -326,9 +328,18 @@ public class FineFeeProcessor
   private static int getLineType( String chargeType )
   {
     LineTypeGenerator generator;
-    
+
     generator = new LineTypeGenerator();
     generator.setServiceName( chargeType );
     return generator.getLineType();
+  }
+
+  private static String makeNote( String header, String value )
+  {
+    StringBuffer note;
+    note = new StringBuffer( header );
+    note.append( !ContentTests.isEmpty( value ) ?
+                 value.trim(): "N/A" );    
+    return note.toString();
   }
 }
