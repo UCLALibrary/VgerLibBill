@@ -60,7 +60,7 @@ public class UpdateInvoiceProcedure
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public void updateInvoice()
@@ -100,5 +100,10 @@ public class UpdateInvoiceProcedure
     out = execute( input );
 
     return out;
+  }
+
+  private Properties getProps()
+  {
+    return props;
   }
 }

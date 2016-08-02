@@ -50,7 +50,7 @@ public class AddLineItemProcedure
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public void addLineItem()
@@ -97,5 +97,10 @@ public class AddLineItemProcedure
     out = execute( input );
 
     return out;
+  }
+
+  private Properties getProps()
+  {
+    return props;
   }
 }

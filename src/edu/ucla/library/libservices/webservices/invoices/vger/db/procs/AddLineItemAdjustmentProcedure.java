@@ -12,12 +12,14 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.jdbc.core.SqlParameter;
+import java.util.Properties;
 
 public class AddLineItemAdjustmentProcedure
   extends StoredProcedure
 {
   private DataSource ds;
   private LineItemAdjustment data;
+  private Properties props;
 
   public AddLineItemAdjustmentProcedure( JdbcTemplate jdbcTemplate,
                                          String string )
@@ -43,7 +45,7 @@ public class AddLineItemAdjustmentProcedure
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public void addAdjustment()
@@ -90,5 +92,15 @@ public class AddLineItemAdjustmentProcedure
     out = execute( input );
 
     return out;
+  }
+
+  public void setProps( Properties props )
+  {
+    this.props = props;
+  }
+
+  private Properties getProps()
+  {
+    return props;
   }
 }

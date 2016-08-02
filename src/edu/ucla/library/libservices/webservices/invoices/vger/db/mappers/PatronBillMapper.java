@@ -5,6 +5,8 @@ import edu.ucla.library.libservices.webservices.invoices.vger.beans.PatronBill;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import org.springframework.jdbc.core.RowMapper;
 
 public class PatronBillMapper
@@ -21,8 +23,9 @@ public class PatronBillMapper
     PatronBill bean;
 
     bean = new PatronBill();
-    bean.setAuthor( rs.getString( "author" ) );
-    bean.setFineFeeBalance( rs.getInt( "fine_fee_balance" ) / 100 );
+    bean.setAuthor( StringEscapeUtils.escapeXml( rs.getString( "author" ) ) );
+    bean.setBibID( rs.getInt( "bib_id" ) );
+    bean.setFineFeeBalance( rs.getInt( "fine_fee_balance" ) );
     bean.setFineFeeID( rs.getInt( "fine_fee_id" ) );
     bean.setFineFeeType( rs.getInt( "fine_fee_type" ) );
     bean.setItemBarcode( rs.getString( "item_barcode" ) );
@@ -30,7 +33,7 @@ public class PatronBillMapper
     bean.setLocationCode( rs.getString( "location_code" ) );
     bean.setNormalizedCallNo( rs.getString( "normalized_call_no" ) );
     bean.setPatronID( rs.getInt( "patron_id" ) );
-    bean.setTitle( rs.getString( "title" ) );
+    bean.setTitle( StringEscapeUtils.escapeXml( rs.getString( "title" ) ) );
 
     return bean;
   }

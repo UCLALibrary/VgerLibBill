@@ -2,6 +2,8 @@ package edu.ucla.library.libservices.webservices.invoices.vger.generators;
 
 import edu.ucla.library.libservices.webservices.invoices.vger.db.source.DataSourceFactory;
 
+import java.util.Properties;
+
 import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,6 +17,7 @@ public class LineTypeGenerator
   private DataSource ds;
   private int lineType;
   private String serviceName;
+  private Properties props;
                  
   public LineTypeGenerator()
   {
@@ -23,7 +26,7 @@ public class LineTypeGenerator
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public int getLineType()
@@ -43,5 +46,15 @@ public class LineTypeGenerator
   private String getServiceName()
   {
     return serviceName;
+  }
+
+  public void setProps( Properties props )
+  {
+    this.props = props;
+  }
+
+  private Properties getProps()
+  {
+    return props;
   }
 }

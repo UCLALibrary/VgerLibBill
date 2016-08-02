@@ -51,7 +51,7 @@ public class AddLineItemNoteProcedure
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public void setProps( Properties props )

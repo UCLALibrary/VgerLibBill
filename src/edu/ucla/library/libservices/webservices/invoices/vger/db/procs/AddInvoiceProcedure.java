@@ -46,7 +46,7 @@ public class AddInvoiceProcedure
 
   private void makeConnection()
   {
-    ds = DataSourceFactory.createBillSource();
+    ds = DataSourceFactory.createBillSource(getProps());
   }
 
   public void setProps( Properties props )
@@ -104,5 +104,10 @@ public class AddInvoiceProcedure
     out = execute( input );
 
     return out;
+  }
+
+  private Properties getProps()
+  {
+    return props;
   }
 }

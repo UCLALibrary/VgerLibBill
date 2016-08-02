@@ -4,6 +4,7 @@ public class PatronBill
 {
   private int patronID;
   private int itemID;
+  private int bibID;
   private String locationCode;
   private String title;
   private String author;
@@ -133,5 +134,15 @@ public class PatronBill
   public String getTransNote()
   {
     return transNote;
+  }
+
+  public void setBibID( int bibID )
+  {
+    this.bibID = bibID;
+  }
+
+  public int getBibID()
+  {
+    return bibID;
   }
 }
