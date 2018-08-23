@@ -35,8 +35,7 @@ public class ReadTest
     {
       String[] tokens;
       tokens = theLine.split( "\t" );
-      System.out.println( "for line " + theLine + "\n\ttoken count = " +
-                          tokens.length );
+      //System.out.println( "for line " + theLine + "\n\ttoken count = " + tokens.length );
     }
   }
 }

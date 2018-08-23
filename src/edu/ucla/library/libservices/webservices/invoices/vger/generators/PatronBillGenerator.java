@@ -32,9 +32,9 @@ public class PatronBillGenerator
     + "p.expire_date > sysdate AND not exists  ( SELECT * FROM " 
     + "ucladb.patron_barcode pb2 WHERE pb2.patron_id = p.patron_id AND " 
     + "pb2.patron_barcode_id <> pb.patron_barcode_id AND pb2.barcode_status = 1 )" 
-//    + " AND trunc(ff.create_date) BETWEEN trunc(TO_DATE('05/11/2016','MM/DD/YYYY'))" 
-//    + " AND trunc(TO_DATE('05/13/2016','MM/DD/YYYY')) ORDER BY ff.patron_id"
-    + "AND p.patron_id IN (355385) ORDER BY ff.patron_id"; //20714,21182,48263,52895,58321,157427,
+    + " AND trunc(ff.create_date) BETWEEN trunc(TO_DATE('06/01/2018','MM/DD/YYYY'))" 
+    + " AND trunc(TO_DATE('07/31/2018','MM/DD/YYYY')) ORDER BY ff.patron_id";
+//    + "AND p.patron_id IN (48263,52895,58321,363429) ORDER BY ff.patron_id"; //20714,21182,48263,52895,58321,157427,
 
   private DataSource ds;
   private List<PatronBill> patrons;

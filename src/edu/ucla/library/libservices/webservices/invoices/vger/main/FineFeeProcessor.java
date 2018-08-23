@@ -31,20 +31,19 @@ import org.apache.log4j.Logger;
 
 public class FineFeeProcessor
 {
-  private static final SimpleDateFormat SIMPLE =
-    new SimpleDateFormat( "MM/dd/yy" );
-  private static final String PERMALINK =
-    "http://catalog.library.ucla.edu/vwebv/holdingsInfo?bibId=";
-  private static final String GENERAL_REPLACE =
-    "Replacement Fee - General Library";
-  private static final String LAW_REPLACE = "Replacement Fee - Law";
-  private static final String PROCESSING = "Processing Fee";
-  private static final String OVERDUE = "Overdue Fine";
+  private static final SimpleDateFormat SIMPLE = new SimpleDateFormat( "MM/dd/yy" );
+  private static final String PERMALINK = "note.permalink";
+  private static final String REPLACEMENT = "type.replace.general";
+  private static final String LAW_REPLACE = "type.replace.law";
+  private static final String PROCESSING = "type.process.general";
+  private static final String OVERDUE = "type.overdue.general";
+  private static final String GENERAL_LIB = "locale.general";
+  private static final String LAW_LIB = "locale.law";
+  private static final String BILL_FILE = "file.bill";
   private static final int VGER_OVERDUE = 1;
   private static final int VGER_REPLACE = 2;
   private static final int VGER_PROCESS = 3;
-  private static final Logger logger =
-    Logger.getLogger( FineFeeProcessor.class );
+  private static final Logger logger = Logger.getLogger( FineFeeProcessor.class );
 
   private static Map<Integer, Vector<PatronBill>> billsByPatron;
   private static Vector<PatronBill> lawBills;
@@ -65,12 +64,12 @@ public class FineFeeProcessor
     prepWriter();
     getAllBills();
     groupBillsByPatron();
-    for ( Integer patronID: billsByPatron.keySet() )
+    for ( Integer patronID : billsByPatron.keySet() )
     {
       groupBillsByLib( patronID );
       if ( lawBills.size() > 0 )
       {
-        generateInvoice( patronID, lawBills, "CS" );
+        generateInvoice( patronID, lawBills, "LW" );
         writeInvoice( lawBills );
       }
       if ( generalLibBills.size() > 0 )
@@ -96,7 +95,7 @@ public class FineFeeProcessor
   private static void groupBillsByPatron()
   {
     billsByPatron = new TreeMap<Integer, Vector<PatronBill>>();
-    for ( PatronBill thePatron: allBills )
+    for ( PatronBill thePatron : allBills )
     {
       if ( billsByPatron.containsKey( thePatron.getPatronID() ) )
         billsByPatron.get( thePatron.getPatronID() ).add( thePatron );
@@ -114,7 +113,7 @@ public class FineFeeProcessor
   {
     lawBills = new Vector<PatronBill>();
     generalLibBills = new Vector<PatronBill>();
-    for ( PatronBill theBill: billsByPatron.get( patronID ) )
+    for ( PatronBill theBill : billsByPatron.get( patronID ) )
     {
       if ( theBill.getLocationCode().startsWith( "lw" ) )
         lawBills.add( theBill );
@@ -123,9 +122,7 @@ public class FineFeeProcessor
     }
   }
 
-  private static void generateInvoice( int patronID,
-                                       Vector<PatronBill> bills,
-                                       String unit )
+  private static void generateInvoice( int patronID, Vector<PatronBill> bills, String unit )
   {
     String invoiceNo;
     int lineNumber = 0;
@@ -134,13 +131,13 @@ public class FineFeeProcessor
           patronID, unit );
     if ( invoiceNo != null && invoiceNo.length() > 0 )
     {
-      System.out.println( "new invoice number: " + invoiceNo );
-      for ( PatronBill theBill: bills )
+      logger.info( "new invoice number: " + invoiceNo );
+      for ( PatronBill theBill : bills )
       {
         lineNumber = addLineItem( theBill, invoiceNo, lineNumber );
         theBill.setTransNote( constructNote( invoiceNo, lineNumber ) );
       }
-      System.out.println( "line count = " + lineNumber );
+      logger.info( "line count = " + lineNumber );
       setStatus( invoiceNo );
     }
     else
@@ -150,8 +147,7 @@ public class FineFeeProcessor
     }
   }
 
-  private static int addLineItem( PatronBill bill, String invoiceNo,
-                                  int lineNumber )
+  private static int addLineItem( PatronBill bill, String invoiceNo, int lineNumber )
   {
     LineItemClient theClient;
     LineItemBean bean;
@@ -161,36 +157,50 @@ public class FineFeeProcessor
 
     bean = new LineItemBean();
 
-    System.out.println( "\tworking with fine/fee record " +
-                        bill.getFineFeeID() );
-    System.out.println( "\tfine fee type = " + bill.getFineFeeType() );
+    //System.out.println( "\tworking with fine/fee record " + bill.getFineFeeID() );
+    //System.out.println( "\tfine fee type = " + bill.getFineFeeType() );
     switch ( bill.getFineFeeType() )
     {
       case VGER_OVERDUE:
-        bean.setBranchServiceID( getLineType( OVERDUE ) );
+        if ( bill.getLocationCode().startsWith( "lw" ) )
+        {
+          bean.setBranchServiceID( getLineType( props.getProperty( OVERDUE ), props.getProperty( LAW_LIB ) ) );
+        }
+        else
+        {
+          bean.setBranchServiceID( getLineType( props.getProperty( OVERDUE ), props.getProperty( GENERAL_LIB ) ) );
+        }
+        //bean.setBranchServiceID( getLineType( OVERDUE, GENERAL_LIB ) );
         break;
       case VGER_REPLACE:
         if ( bill.getLocationCode().startsWith( "lw" ) )
         {
-          bean.setBranchServiceID( getLineType( LAW_REPLACE ) );
+          bean.setBranchServiceID( getLineType( props.getProperty( LAW_REPLACE ), props.getProperty( LAW_LIB ) ) );
         }
         else
         {
-          bean.setBranchServiceID( getLineType( GENERAL_REPLACE ) );
+          bean.setBranchServiceID( getLineType( props.getProperty( REPLACEMENT ), props.getProperty( GENERAL_LIB ) ) );
         }
         break;
       case VGER_PROCESS:
-        bean.setBranchServiceID( getLineType( PROCESSING ) );
+        if ( bill.getLocationCode().startsWith( "lw" ) )
+        {
+          bean.setBranchServiceID( getLineType( props.getProperty( PROCESSING ), props.getProperty( LAW_LIB ) ) );
+        }
+        else
+        {
+          bean.setBranchServiceID( getLineType( props.getProperty( PROCESSING ), props.getProperty( GENERAL_LIB ) ) );
+        }
+        //bean.setBranchServiceID( getLineType( PROCESSING, GENERAL_LIB ) );
         break;
       default:
-        logger.info( "no match made for charge type " +
-                     bill.getFineFeeType() );
+        logger.info( "no match made for charge type " + bill.getFineFeeType() );
     }
+    //System.out.println( "\tsetting line type to " + bean.getBranchServiceID() );
     if ( ( bill.getFineFeeType() == VGER_OVERDUE ) ||
-         ( bill.getFineFeeType() == VGER_REPLACE ) ) //custom price fines
+       ( bill.getFineFeeType() == VGER_REPLACE ) ) //custom price fines
     {
-      System.out.println( "\t\tsetting line amount to " +
-                          bill.getFineFeeBalance() );
+      //System.out.println( "\t\tsetting line amount to " + bill.getFineFeeBalance() );
       bean.setUnitPrice( bill.getFineFeeBalance() / 100D );
     }
     bean.setCreatedBy( "vger_user" );
@@ -229,12 +239,11 @@ public class FineFeeProcessor
 
     invoice = theClient.insertHeader();
 
-    System.out.println( "invoice # = " + invoice );
+    //System.out.println( "invoice # = " + invoice + " for patron " + patronID );
     return invoice;
   }
 
-  private static void addLineNote( String invoiceNo, int lineNumber,
-                                   PatronBill bill )
+  private static void addLineNote( String invoiceNo, int lineNumber, PatronBill bill )
   {
     LineItemNote theNote;
     LineNoteClient theClient;
@@ -247,7 +256,7 @@ public class FineFeeProcessor
     notes.add( makeNote( "Call number: ", bill.getNormalizedCallNo() ) );
     notes.add( makeNote( "Permalink: ", makeLink( bill.getBibID() ) ) );
 
-    for ( String aNote: notes )
+    for ( String aNote : notes )
     {
       theNote = new LineItemNote();
       theNote.setCreatedBy( "vger_user" );
@@ -280,8 +289,7 @@ public class FineFeeProcessor
   {
     try
     {
-      writer =
-          new BufferedWriter( new FileWriter( new File( "C:\\Temp\\libbill\\post_libbill_trans" ) ) );
+      writer = new BufferedWriter( new FileWriter( new File( props.getProperty( BILL_FILE ) ) ) );
     }
     catch ( IOException ioe )
     {
@@ -292,13 +300,13 @@ public class FineFeeProcessor
 
   private static void writeInvoice( Vector<PatronBill> bills )
   {
-    for ( PatronBill theBill: bills )
+    for ( PatronBill theBill : bills )
     {
       try
       {
         writer.write( theBill.getPatronID() + "\t" );
         writer.write( theBill.getFineFeeBalance() / 100 + "\t" );
-        writer.write( "11\t0\t" );
+        writer.write( "5\t0\t" );
         writer.write( theBill.getFineFeeID() + "\t" );
         writer.write( theBill.getTransNote() );
         writer.newLine();
@@ -336,12 +344,13 @@ public class FineFeeProcessor
     }
   }
 
-  private static int getLineType( String chargeType )
+  private static int getLineType( String chargeType, String locale )
   {
     LineTypeGenerator generator;
 
     generator = new LineTypeGenerator();
     generator.setServiceName( chargeType );
+    generator.setLocation( locale );
     generator.setProps( props );
     return generator.getLineType();
   }
@@ -350,13 +359,13 @@ public class FineFeeProcessor
   {
     StringBuffer note;
     note = new StringBuffer( header );
-    note.append( !ContentTests.isEmpty( value ) ? value.trim(): "N/A" );
+    note.append( !ContentTests.isEmpty( value ) ? value.trim() : "N/A" );
     return note.toString();
   }
-  
-  private static String makeLink(int bibID)
+
+  private static String makeLink( int bibID )
   {
-    return PERMALINK.concat( String.valueOf(  bibID ) );
+    return props.getProperty( PERMALINK ).concat( String.valueOf( bibID ) );
   }
 
   private static void loadProperties( String propFile )

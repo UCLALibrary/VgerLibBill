@@ -12,11 +12,12 @@ public class LineTypeGenerator
 {
   private static final String QUERY =
     "SELECT location_service_id FROM location_service_vw WHERE location_code " 
-    + "= 'CS' AND subtype_name = ?";
+    + "= ? AND subtype_name = ?";
 
   private DataSource ds;
   private int lineType;
   private String serviceName;
+  private String location;
   private Properties props;
                  
   public LineTypeGenerator()
@@ -32,8 +33,9 @@ public class LineTypeGenerator
   public int getLineType()
   {
     makeConnection();
+    //System.out.println( "\t\tchecking for location " + getLocation() + " and type " + getServiceName() );
     lineType = new JdbcTemplate( ds ).queryForInt( 
-        QUERY, new Object[] { getServiceName() } );
+        QUERY, new Object[] { getLocation(), getServiceName() } );
 
     return lineType;
   }
@@ -56,5 +58,15 @@ public class LineTypeGenerator
   private Properties getProps()
   {
     return props;
+  }
+
+  public void setLocation( String location )
+  {
+    this.location = location;
+  }
+
+  private String getLocation()
+  {
+    return location;
   }
 }
