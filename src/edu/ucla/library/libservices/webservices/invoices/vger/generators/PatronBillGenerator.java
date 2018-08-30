@@ -14,8 +14,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 public class PatronBillGenerator
 {
-  private static final String QUERY = 
-    "SELECT ff.patron_id, ff.item_id, bi.bib_id, il.location_code, unifix(bt.title) AS title, " 
+  private static final String QUERY = "query.bill";
+/*    "SELECT ff.patron_id, ff.item_id, bi.bib_id, il.location_code, unifix(bt.title) AS title, " 
     + "unifix(bt.author) AS author, ib.item_barcode, mm.normalized_call_no, ff.fine_fee_balance," 
     + " ff.fine_fee_type, ff.fine_fee_id FROM ucladb.fine_fee ff INNER JOIN " 
     + "ucladb.patron p ON ff.patron_id = p.patron_id INNER JOIN ucladb.patron_barcode" 
@@ -33,7 +33,7 @@ public class PatronBillGenerator
     + "ucladb.patron_barcode pb2 WHERE pb2.patron_id = p.patron_id AND " 
     + "pb2.patron_barcode_id <> pb.patron_barcode_id AND pb2.barcode_status = 1 )" 
     + " AND trunc(ff.create_date) BETWEEN trunc(TO_DATE('06/01/2018','MM/DD/YYYY'))" 
-    + " AND trunc(TO_DATE('07/31/2018','MM/DD/YYYY')) ORDER BY ff.patron_id";
+    + " AND trunc(TO_DATE('07/31/2018','MM/DD/YYYY')) ORDER BY ff.patron_id";*/
 //    + "AND p.patron_id IN (48263,52895,58321,363429) ORDER BY ff.patron_id"; //20714,21182,48263,52895,58321,157427,
 
   private DataSource ds;
@@ -54,7 +54,7 @@ public class PatronBillGenerator
   public List<PatronBill> getPatrons()
   {
     makeConnection();
-    patrons = new JdbcTemplate(ds).query( QUERY, new PatronBillMapper() );
+    patrons = new JdbcTemplate(ds).query( props.getProperty( QUERY ), new PatronBillMapper() );
     return patrons;
   }
 
