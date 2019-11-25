@@ -8,6 +8,7 @@ import edu.ucla.library.libservices.webservices.invoices.vger.beans.PatronBill;
 import edu.ucla.library.libservices.webservices.invoices.vger.client.HeaderClient;
 import edu.ucla.library.libservices.webservices.invoices.vger.client.LineItemClient;
 import edu.ucla.library.libservices.webservices.invoices.vger.client.LineNoteClient;
+import edu.ucla.library.libservices.webservices.invoices.vger.client.PdfClient;
 import edu.ucla.library.libservices.webservices.invoices.vger.client.StatusClient;
 import edu.ucla.library.libservices.webservices.invoices.vger.generators.LineTypeGenerator;
 import edu.ucla.library.libservices.webservices.invoices.vger.generators.PatronBillGenerator;
@@ -38,7 +39,7 @@ public class FineFeeProcessor
   private static final String PROCESSING = "type.process.general";
   private static final String OVERDUE = "type.overdue.general";
   private static final String GENERAL_LIB = "locale.general";
-  private static final String LAW_LIB = "locale.law";
+  //private static final String LAW_LIB = "locale.law";
   private static final String BILL_FILE = "file.bill";
   private static final int VGER_OVERDUE = 1;
   private static final int VGER_REPLACE = 2;
@@ -69,7 +70,8 @@ public class FineFeeProcessor
       groupBillsByLib( patronID );
       if ( lawBills.size() > 0 )
       {
-        generateInvoice( patronID, lawBills, "LW" );
+        //generateInvoice( patronID, lawBills, "LW" );
+        generateInvoice( patronID, lawBills, "CS" );
         writeInvoice( lawBills );
       }
       if ( generalLibBills.size() > 0 )
@@ -90,6 +92,8 @@ public class FineFeeProcessor
     //generator.setDbName( "" );
 
     allBills = generator.getPatrons();
+    for ( PatronBill theBill : allBills )
+      System.out.println( theBill.toString() );
   }
 
   private static void groupBillsByPatron()
@@ -125,13 +129,15 @@ public class FineFeeProcessor
   private static void generateInvoice( int patronID, Vector<PatronBill> bills, String unit )
   {
     String invoiceNo;
-    int lineNumber = 0;
+    int lineNumber;
 
-    invoiceNo = createHeader( //bills,
-          patronID, unit );
+    lineNumber = 0;
+    invoiceNo = createHeader( patronID, unit );
+
     if ( invoiceNo != null && invoiceNo.length() > 0 )
     {
       logger.info( "new invoice number: " + invoiceNo );
+      System.out.println( "new invoice number: " + invoiceNo );
       for ( PatronBill theBill : bills )
       {
         lineNumber = addLineItem( theBill, invoiceNo, lineNumber );
@@ -139,12 +145,20 @@ public class FineFeeProcessor
       }
       logger.info( "line count = " + lineNumber );
       setStatus( invoiceNo );
+      mailInvoice( invoiceNo );
     }
     else
     {
       /*mailError( " Problem creating invoice header", "",
                  concatReqIDs( files.toArray() ) );*/
     }
+  }
+  private static void mailInvoice(String invoiceNo)
+  {
+    PdfClient client;
+    client = new PdfClient();
+    client.setInvoiceNo( invoiceNo );
+    client.mailPdf();
   }
 
   private static int addLineItem( PatronBill bill, String invoiceNo, int lineNumber )
@@ -157,25 +171,26 @@ public class FineFeeProcessor
 
     bean = new LineItemBean();
 
-    //System.out.println( "\tworking with fine/fee record " + bill.getFineFeeID() );
-    //System.out.println( "\tfine fee type = " + bill.getFineFeeType() );
+    System.out.println( "\tworking with fine/fee record " + bill.getFineFeeID() );
+    System.out.println( "\tfine fee type = " + bill.getFineFeeType() );
     switch ( bill.getFineFeeType() )
     {
       case VGER_OVERDUE:
-        if ( bill.getLocationCode().startsWith( "lw" ) )
+        /*if ( bill.getLocationCode().startsWith( "lw" ) )
         {
           bean.setBranchServiceID( getLineType( props.getProperty( OVERDUE ), props.getProperty( LAW_LIB ) ) );
         }
         else
         {
           bean.setBranchServiceID( getLineType( props.getProperty( OVERDUE ), props.getProperty( GENERAL_LIB ) ) );
-        }
-        //bean.setBranchServiceID( getLineType( OVERDUE, GENERAL_LIB ) );
+        }*/
+        bean.setBranchServiceID( getLineType( props.getProperty( OVERDUE ), props.getProperty( GENERAL_LIB ) ) );
         break;
       case VGER_REPLACE:
         if ( bill.getLocationCode().startsWith( "lw" ) )
         {
-          bean.setBranchServiceID( getLineType( props.getProperty( LAW_REPLACE ), props.getProperty( LAW_LIB ) ) );
+          //bean.setBranchServiceID( getLineType( props.getProperty( LAW_REPLACE ), props.getProperty( LAW_LIB ) ) );
+          bean.setBranchServiceID( getLineType( props.getProperty( LAW_REPLACE ), props.getProperty( GENERAL_LIB ) ) );
         }
         else
         {
@@ -183,24 +198,24 @@ public class FineFeeProcessor
         }
         break;
       case VGER_PROCESS:
-        if ( bill.getLocationCode().startsWith( "lw" ) )
+        /*if ( bill.getLocationCode().startsWith( "lw" ) )
         {
           bean.setBranchServiceID( getLineType( props.getProperty( PROCESSING ), props.getProperty( LAW_LIB ) ) );
         }
         else
         {
           bean.setBranchServiceID( getLineType( props.getProperty( PROCESSING ), props.getProperty( GENERAL_LIB ) ) );
-        }
-        //bean.setBranchServiceID( getLineType( PROCESSING, GENERAL_LIB ) );
+        }*/
+        bean.setBranchServiceID( getLineType( props.getProperty( PROCESSING ), props.getProperty( GENERAL_LIB ) ) );
         break;
       default:
         logger.info( "no match made for charge type " + bill.getFineFeeType() );
     }
-    //System.out.println( "\tsetting line type to " + bean.getBranchServiceID() );
+    System.out.println( "\tsetting line type to " + bean.getBranchServiceID() );
     if ( ( bill.getFineFeeType() == VGER_OVERDUE ) ||
        ( bill.getFineFeeType() == VGER_REPLACE ) ) //custom price fines
     {
-      //System.out.println( "\t\tsetting line amount to " + bill.getFineFeeBalance() );
+      System.out.println( "\t\tsetting line amount to " + bill.getFineFeeBalance() );
       bean.setUnitPrice( bill.getFineFeeBalance() / 100D );
     }
     bean.setCreatedBy( "vger_user" );
@@ -346,6 +361,8 @@ public class FineFeeProcessor
 
   private static int getLineType( String chargeType, String locale )
   {
+    //System.out.print( "in getLineType with type " + chargeType + "  and locale " + locale );
+
     LineTypeGenerator generator;
 
     generator = new LineTypeGenerator();
