@@ -75,7 +75,17 @@ public class RefundProcessor
       bean.setLineNumber( theRefund.getLineNumber() );
       theClient.setTheRefund( bean );
       theClient.setProps( getProps() );
-      theClient.insertRefund();
+      try
+      {
+        theClient.insertRefund();
+      }
+      catch ( Exception e )
+      {
+        System.err.println("problem with " + theRefund.getInvoiceNumber() + " on line " +
+                          theRefund.getLineNumber() + " : " + e.getMessage());
+        logger.error("problem with " + theRefund.getInvoiceNumber() + " on line " +
+                          theRefund.getLineNumber() + " : " + e.getMessage());
+      }
     }
   }
 
